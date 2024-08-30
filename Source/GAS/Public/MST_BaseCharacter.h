@@ -24,7 +24,7 @@ protected:
 	class UMST_HealthSet* HealthSet;
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
-	TArray<TSubclassOf<class UMST_GameAbility>> DefaultAbilities;
+	TArray<TSubclassOf<class UMST_GameplayAbility>> DefaultAbilities;
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
 	TArray<TSubclassOf<class UGameplayEffect>> DefaultEffects;

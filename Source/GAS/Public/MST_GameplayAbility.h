@@ -19,5 +19,5 @@ class GAS_API UMST_GameplayAbility : public UGameplayAbility
 	EAbilityInputID AbilityInputID{ EAbilityInputID::None };
 
 public:
-	EAbilityInputID GetAbilityInputID() { return AbilityInputID; };
+	EAbilityInputID GetAbilityInputID() const { return AbilityInputID; };
 };

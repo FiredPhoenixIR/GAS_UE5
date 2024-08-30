@@ -36,11 +36,65 @@ UAbilitySystemComponent* AMST_BaseCharacter::GetAbilitySystemComponent() const
 
 void AMST_BaseCharacter::InitializeAbilities()
 {
+	if (!HasAuthority() || !AbilitySystemComponent) {
+		return;
+	}
+
+	for (TSubclassOf<UMST_GameplayAbility>& Ability : DefaultAbilities) {
+		FGameplayAbilitySpecHandle AbilityHandle = AbilitySystemComponent->GiveAbility(
+			FGameplayAbilitySpec(Ability, 1,
+				static_cast<int32>(Cast<UMST_GameplayAbility>(Ability->GetDefaultObject())->GetAbilityInputID()), 
+				// Cause GetDefault returns UOBJECT* we need to cast again
+				this));
+	}
 }
 
 void AMST_BaseCharacter::InitializeEffects()
 {
+	if (!AbilitySystemComponent) {
+		return;
+	}
+
+	FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
+	EffectContext.AddSourceObject(this);
+
+	for (TSubclassOf<UGameplayEffect>& Effect : DefaultEffects) {
+		FGameplayEffectSpecHandle EffectHandle = AbilitySystemComponent->MakeOutgoingSpec(Effect, 1, EffectContext);
+		if (EffectHandle.IsValid()) {
+			FActiveGameplayEffectHandle GEHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*EffectHandle.Data.Get());
+		}
+	}
 }
+
+void AMST_BaseCharacter::PostInitializeComponents()
+{
+	if (!AbilitySystemComponent)
+		return;
+
+	AbilitySystemComponent->InitAbilityActorInfo(this // It would be player state if it was the owner but i attached to character
+		, this);
+
+	InitializeAbilities();
+	InitializeEffects();
+}
+
+void AMST_BaseCharacter::OnDamageTakenChanged(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayTagContainer& GameplayTagConstainer, float Damage)
+{
+	OnDamageTaken(DamageInstigator, DamageCauser, GameplayTagConstainer, Damage);
+}
+
+
+void AMST_BaseCharacter::OnHealthAttributeChanged(const FOnAttributeChangeData& Data)
+{
+	OnHealthChanged(Data.OldValue, Data.NewValue);
+}
+
+
+void AMST_BaseCharacter::OnShieldAttributeChanged(const FOnAttributeChangeData& Data)
+{
+	OnShieldChanged(Data.OldValue, Data.NewValue);
+}
+
 
 // Called every frame
 void AMST_BaseCharacter::Tick(float DeltaTime)
